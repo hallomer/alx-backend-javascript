@@ -6,10 +6,9 @@ app.get('/', (req, res) => {
 });
 
 const port = 7865;
-app.listen(port, () => {
+const server = app.listen(port, () => {
     console.log(`API available on localhost port ${port}`);
 });
-
 
 app.get('/cart/:id([0-9]+)', (req, res) => {
   const id = req.params.id;
@@ -34,4 +33,4 @@ app.post('/login', express.json(), (req, res) => {
   res.send(`Welcome ${userName}`);
 });
 
-module.exports = app;
+module.exports = { app, server };
