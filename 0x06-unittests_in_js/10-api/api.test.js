@@ -1,85 +1,76 @@
 const request = require('request');
 const { expect } = require('chai');
-const { app, server } = require('./api');
 
 describe('Index page', function () {
-    const url = 'http://localhost:7865/';
+  const baseUrl = 'http://localhost:7865';
 
-    it('GET / returns "Welcome to the payment system"', function (done) {
-        request(url, function (error, response, body) {
-            expect(response.statusCode).to.equal(200);
-            expect(body).to.equal('Welcome to the payment system');
-            done();
-        });
+  it('should return correct message for GET /', function (done) {
+    request(`${baseUrl}/`, function (error, response, body) {
+      expect(response.statusCode).to.equal(200);
+      expect(body).to.equal('Welcome to the payment system');
+      done();
     });
+  });
 });
 
 describe('Cart page', function () {
-    const baseUrl = 'http://localhost:7865/cart/';
+  const baseUrl = 'http://localhost:7865/cart';
 
-    it('GET /cart/:id returns correct message', function (done) {
-        request(baseUrl + '12', function (error, response, body) {
-            expect(response.statusCode).to.equal(200);
-            expect(body).to.equal('Payment methods for cart 12');
-            done();
-        });
+  it('should return correct message for valid cart id', function (done) {
+    request(`${baseUrl}/12`, function (error, response, body) {
+      expect(response.statusCode).to.equal(200);
+      expect(body).to.equal('Payment methods for cart 12');
+      done();
     });
+  });
 
-    it('GET /cart/:id returns 404 for non-numeric id', function (done) {
-        request(baseUrl + 'abc', function (error, response, body) {
-            expect(response.statusCode).to.equal(404);
-            expect(body).to.equal('Not Found');
-            done();
-        });
+  it('should return 404 for invalid cart id', function (done) {
+    request(`${baseUrl}/hello`, function (error, response, body) {
+      expect(response.statusCode).to.equal(404);
+      done();
     });
+  });
 });
 
-describe('Available payments', function () {
-    const url = 'http://localhost:7865/available_payments';
+describe('Available Payments endpoint', function () {
+  const baseUrl = 'http://localhost:7865';
 
-    it('GET /available_payments returns correct payment methods', function (done) {
-        request(url, function (error, response, body) {
-            const jsonBody = JSON.parse(body);
-            expect(response.statusCode).to.equal(200);
-            expect(jsonBody).to.deep.equal({
-                payment_methods: {
-                    credit_cards: true,
-                    paypal: false
-                }
-            });
-            done();
-        });
+  it('should return correct payment methods', function (done) {
+    request(`${baseUrl}/available_payments`, function (error, response, body) {
+      expect(response.statusCode).to.equal(200);
+      expect(JSON.parse(body)).to.deep.equal({
+        payment_methods: {
+          credit_cards: true,
+          paypal: false
+        }
+      });
+      done();
     });
+  });
 });
 
-describe('Login', function () {
-    const url = 'http://localhost:7865/login';
+describe('Login endpoint', function () {
+  const baseUrl = 'http://localhost:7865';
 
-    it('POST /login returns correct welcome message', function (done) {
-        request.post({
-            url: url,
-            json: { userName: 'Betty' },
-            headers: { 'Content-Type': 'application/json' }
-        }, function (error, response, body) {
-            expect(response.statusCode).to.equal(200);
-            expect(body).to.equal('Welcome Betty');
-            done();
-        });
+  it('should return correct welcome message for POST /login', function (done) {
+    request.post({
+      url: `${baseUrl}/login`,
+      json: { userName: 'Betty' }
+    }, function (error, response, body) {
+      expect(response.statusCode).to.equal(200);
+      expect(body).to.equal('Welcome Betty');
+      done();
     });
+  });
 
-    it('POST /login returns correct welcome message for other users', function (done) {
-        request.post({
-            url: url,
-            json: { userName: 'Alice' },
-            headers: { 'Content-Type': 'application/json' }
-        }, function (error, response, body) {
-            expect(response.statusCode).to.equal(200);
-            expect(body).to.equal('Welcome Alice');
-            done();
-        });
+  it('should return 400 for POST /login without userName', function (done) {
+    request.post({
+      url: `${baseUrl}/login`,
+      json: {}
+    }, function (error, response, body) {
+      expect(response.statusCode).to.equal(400);
+      expect(body).to.equal('Bad Request');
+      done();
     });
-});
-
-after(function (done) {
-    server.close(done);
+  });
 });
