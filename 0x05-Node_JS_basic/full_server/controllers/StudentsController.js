@@ -1,36 +1,39 @@
-#!/usr/bin/node
-const readDatabase = require('../utils');
+const { readDatabase } = require('../utils');
 
 class StudentsController {
-  static async getAllStudents(req, res) {
-    try {
-      const fields = await readDatabase('database.csv');
-      const response = ['This is the list of our students'];
+  static getAllStudents(request, response) {
+    const databaseFile = process.argv[2];
 
-      for (const [field, students] of Object.entries(fields)) {
-        response.push(`Number of students in ${field}: ${students.length}. List: ${students.join(', ')}`);
-      }
-
-      res.send(response.join('\n'));
-    } catch (err) {
-      res.status(500).send(err.message);
-    }
+    readDatabase(databaseFile)
+      .then((students) => {
+        let output = 'This is the list of our students\n';
+        for (const field of Object.keys(students).sort()) {
+          output += `Number of students in ${field}: ${students[field].length}. List: ${students[field].join(', ')}\n`;
+        }
+        response.status(200).send(output.trim());
+      })
+      .catch((err) => {
+        response.status(500).send(err.message);
+      });
   }
 
-  static async getAllStudentsByMajor(req, res) {
-    const { major } = req.params;
+  static getAllStudentsByMajor(request, response) {
+    const databaseFile = process.argv[2];
+    const major = request.params.major;
+
     if (major !== 'CS' && major !== 'SWE') {
-      res.status(500).send('Major parameter must be CS or SWE');
+      response.status(500).send('Major parameter must be CS or SWE');
       return;
     }
 
-    try {
-      const fields = await readDatabase('database.csv');
-      const students = fields[major] || [];
-      res.send(`List: ${students.join(', ')}`);
-    } catch (err) {
-      res.status(500).send(err.message);
-    }
+    readDatabase(databaseFile)
+      .then((students) => {
+        const list = students[major] || [];
+        response.status(200).send(`List: ${list.join(', ')}`);
+      })
+      .catch((err) => {
+        response.status(500).send(err.message);
+      });
   }
 }
 
